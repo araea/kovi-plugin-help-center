@@ -4,6 +4,7 @@
 //!
 //! ## 功能特性
 //! - 🎨 玻璃拟态 UI 设计，支持自定义主题
+//! - 📱 **移动端优先设计**，竖屏阅读更舒适
 //! - 📁 分类展示，层次清晰
 //! - 🔍 支持按名称/指令搜索
 //! - 💾 智能缓存，配置变更自动刷新
@@ -74,7 +75,7 @@ mod config {
         "#fdf4ff".into()
     }
     fn default_card_opacity() -> f32 {
-        0.85
+        0.90 // 提高不透明度，增强手机阅读时的对比度
     }
 
     impl Default for Theme {
@@ -240,7 +241,8 @@ mod render {
     use std::path::Path;
     use tera::{Context, Tera};
 
-    /// 现代化玻璃拟态风格模板
+    /// 现代化玻璃拟态风格模板 - 移动端优化版
+    /// 宽度调整为 480px，单栏布局
     const HTML_TEMPLATE: &str = r##"
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -260,20 +262,21 @@ mod render {
             font-family: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
             min-height: 100vh;
-            padding: 32px;
-            width: 900px;
+            /* 宽度调整为手机逻辑像素宽度，生成图片后更适合手机查看 */
+            padding: 24px;
+            width: 480px;
         }
 
         .container {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 20px;
         }
 
         /* 头部区域 */
         .header {
             text-align: center;
-            padding: 24px 0;
+            padding: 20px 0;
             position: relative;
         }
 
@@ -283,8 +286,8 @@ mod render {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
+            width: 150px;
+            height: 150px;
             background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
             opacity: 0.15;
             border-radius: 50%;
@@ -292,7 +295,7 @@ mod render {
         }
 
         .title {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 800;
             background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
             -webkit-background-clip: text;
@@ -300,14 +303,14 @@ mod render {
             background-clip: text;
             position: relative;
             z-index: 1;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
 
         .subtitle {
-            font-size: 14px;
+            font-size: 13px;
             color: #64748b;
-            margin-top: 8px;
-            letter-spacing: 4px;
+            margin-top: 6px;
+            letter-spacing: 3px;
             text-transform: uppercase;
         }
 
@@ -316,74 +319,77 @@ mod render {
             background: rgba(255, 255, 255, var(--card-opacity));
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 18px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
             box-shadow:
-                0 4px 24px rgba(0, 0, 0, 0.06),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+                0 4px 20px rgba(0, 0, 0, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
         .category-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             padding-bottom: 12px;
             border-bottom: 2px solid rgba(99, 102, 241, 0.1);
         }
 
         .category-icon {
-            font-size: 24px;
-            width: 44px;
-            height: 44px;
+            font-size: 20px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
         }
 
         .category-name {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: #1e293b;
         }
 
         .category-count {
-            font-size: 12px;
-            color: #94a3b8;
-            background: #f1f5f9;
+            font-size: 11px;
+            color: #64748b;
+            background: rgba(241, 245, 249, 0.8);
             padding: 4px 10px;
-            border-radius: 20px;
+            border-radius: 12px;
             margin-left: auto;
+            font-weight: 500;
         }
 
-        /* 插件网格 */
-        .plugins-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+        /* 插件列表 - 改为单栏垂直布局 */
+        .plugins-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .plugin-card {
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.6);
             border-radius: 14px;
-            padding: 16px;
+            padding: 14px 16px;
             border: 1px solid rgba(255, 255, 255, 0.8);
-            transition: all 0.2s ease;
         }
 
         .plugin-header {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
         }
 
         .plugin-icon {
-            font-size: 20px;
+            font-size: 18px;
+            margin-top: 1px;
+            filter: grayscale(0.2);
         }
 
         .plugin-info {
@@ -395,15 +401,14 @@ mod render {
             font-size: 15px;
             font-weight: 600;
             color: #334155;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.4;
         }
 
         .plugin-desc {
-            font-size: 12px;
+            font-size: 13px;
             color: #64748b;
-            margin-top: 2px;
+            margin-top: 4px;
+            line-height: 1.4;
         }
 
         /* 指令标签 */
@@ -411,40 +416,43 @@ mod render {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
+            margin-left: 30px; /* 对齐文字内容 */
         }
 
         .cmd-tag {
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 11px;
-            padding: 5px 10px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            font-size: 12px;
+            padding: 6px 10px;
+            background: white;
             color: var(--primary);
             border-radius: 8px;
-            font-weight: 500;
+            font-weight: 600;
             border: 1px solid rgba(99, 102, 241, 0.15);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
         }
 
         /* 底部 */
         .footer {
             text-align: center;
-            padding: 20px 0 8px;
+            padding: 16px 0 8px;
             color: #94a3b8;
             font-size: 12px;
         }
 
         .footer-divider {
-            width: 60px;
+            width: 40px;
             height: 3px;
             background: linear-gradient(90deg, transparent, var(--primary), transparent);
             margin: 0 auto 12px;
             border-radius: 2px;
-            opacity: 0.5;
+            opacity: 0.4;
         }
 
         .tip {
             margin-top: 8px;
             font-size: 11px;
             color: #cbd5e1;
+            font-style: italic;
         }
     </style>
 </head>
@@ -464,9 +472,9 @@ mod render {
             <div class="category-header">
                 <div class="category-icon">{{ cat.icon | default(value="📦") }}</div>
                 <span class="category-name">{{ cat.name }}</span>
-                <span class="category-count">{{ cat.plugins | length }} 个插件</span>
+                <span class="category-count">{{ cat.plugins | length }}</span>
             </div>
-            <div class="plugins-grid">
+            <div class="plugins-list">
                 {% for plugin in cat.plugins %}
                 <div class="plugin-card">
                     <div class="plugin-header">
@@ -510,8 +518,10 @@ mod render {
         let browser = Browser::instance().await;
 
         let opts = CaptureOptions::new()
-            .with_viewport(Viewport::new(932, 100).with_device_scale_factor(2.0))
-            .with_quality(92)
+            // 宽度设置为 480，配合 2.0 的缩放，生成宽度为 960px 的图片
+            // 在手机上显示时，视觉大小相当于 480px 宽，阅读体验最佳
+            .with_viewport(Viewport::new(480, 100).with_device_scale_factor(2.0))
+            .with_quality(90)
             .with_full_page(true);
 
         let base64 = browser
@@ -584,7 +594,8 @@ mod handler {
 
         // 检查缓存
         if !cache::is_valid(&cache_path) {
-            event.reply("🎨 正在生成帮助菜单...");
+            // 发送临时消息提示（可选，如果生成很快也可以不发）
+            // event.reply("🎨 正在生成帮助菜单...");
 
             // 生成 HTML
             let html = match render::build_html(&config) {
