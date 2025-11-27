@@ -708,6 +708,7 @@ mod handler {
     }
 }
 
+use cdp_html_shot::Browser;
 // ============================================================================
 //                              插件入口
 // ============================================================================
@@ -773,6 +774,15 @@ async fn main() {
             // 4. 检查是否是帮助指令
             if triggers.iter().any(|t| t.to_lowercase() == text_lower) {
                 handler::handle_help(&event, &config_lock, &data_dir).await;
+            }
+        }
+    });
+
+    PluginBuilder::drop({
+        move || {
+            async move {
+                // 关闭全局浏览器实例
+                Browser::shutdown_global().await;
             }
         }
     });
