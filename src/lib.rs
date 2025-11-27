@@ -726,7 +726,7 @@ async fn main() {
     // 预热浏览器（后台异步）
     tokio::spawn(async {
         cdp_html_shot::Browser::instance().await;
-        kovi::log::info!("[help-center] 浏览器预热完成");
+        // kovi::log::info!("[help-center] 浏览器预热完成");
     });
 
     // 消息处理
